@@ -229,7 +229,8 @@
             
             const cameraUtils = new Camera(video, {
                 onFrame: async () => { await hands.send({image: video}); },
-                width: 320, height: 240
+                width: 320, height: 240,
+                facingMode: 'user' // <--- INI RAHASIANYA! (Wajib Kamera Depan)
             });
             cameraUtils.start();
         });
