@@ -222,23 +222,48 @@
         }
         animate();
 
-        // --- START BUTTON ---
-        document.getElementById('start-btn').addEventListener('click', () => {
-            document.getElementById('start-btn').style.display = 'none';
-            document.getElementById('ui').style.display = 'block';
+         // --- START BUTTON (Versi Deteksi Masalah) ---
+        document.getElementById('start-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('start-btn');
+            const ui = document.getElementById('ui');
             
-            const cameraUtils = new Camera(video, {
-                onFrame: async () => { await hands.send({image: video}); },
-                width: 320, height: 240,
-                facingMode: 'user' // <--- INI RAHASIANYA! (Wajib Kamera Depan)
-            });
-            cameraUtils.start();
-        });
+            try {
+                // Coba paksa minta izin kamera depan
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: { exact: "user" }, // Paksa harus 'user'
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                });
+                
+                video.srcObject = stream;
+                await video.play();
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth/window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+                // Kalau sampai sini berarti Kamera SUKSES menyala
+                btn.style.display = 'none';
+                ui.style.display = 'block';
+                ui.innerText = "✅ Kamera Aktif! Gerakkan Tangan...";
+
+                // Jalankan MediaPipe
+                const cameraUtils = new Camera(video, {
+                    onFrame: async () => { await hands.send({image: video}); },
+                    width: 640, 
+                    height: 480
+                });
+                cameraUtils.start();
+
+            } catch (error) {
+                // Kalau error, tampilkan pesan di tombol
+                console.error(error);
+                btn.innerText = "ERROR: IZIN KAMERA DITOLAK!";
+                btn.style.background = "red";
+                btn.style.color = "white";
+                
+                // Jelaskan penyebabnya
+                ui.style.display = 'block';
+                ui.innerText = "Cek: 1. Browser Chrome? 2. Izinkan Kamera? 3. Jangan pakai Incognito?";
+            }
         });
 
     </script>
